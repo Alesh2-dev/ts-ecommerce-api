@@ -57,17 +57,39 @@ src/
 ### Prerequisites
 
 - Node.js 18+
-- MySQL 8 running locally (or via Docker)
+- Docker (recommended) — or a local MySQL 8 instance
 
-### 1. Clone & install
+### ⚡ Quickstart (Docker — copy-paste ready)
 
 ```bash
-git clone https://github.com/Alesh2-dev/ts-ecommerce-api.git
+git clone https://t.co/MLxLJubBM2
+cd ts-ecommerce-api
+cp .env.example .env        # uses defaults that match docker-compose.yml
+docker compose up -d        # starts MySQL in the background
+npm install
+npm run db:seed             # creates tables + seeds users/products
+npm run dev
+```
+
+Server runs at: `http://localhost:3000`
+
+> **No local MySQL needed.** The `docker-compose.yml` spins up a MySQL 8 container pre-configured to match the default `.env.example` values — no edits required to get running.
+
+---
+
+### Manual Setup (local MySQL)
+
+If you prefer a local MySQL instance instead of Docker:
+
+**1. Clone & install**
+
+```bash
+git clone https://t.co/MLxLJubBM2
 cd ts-ecommerce-api
 npm install
 ```
 
-### 2. Configure environment
+**2. Configure environment**
 
 ```bash
 cp .env.example .env
@@ -75,19 +97,13 @@ cp .env.example .env
 
 Edit `.env` with your local MySQL credentials (see [Environment Variables](#environment-variables) below).
 
-### 3. Start the database (Docker)
-
-```bash
-docker compose up -d
-```
-
-### 4. Set up the database
+**3. Set up the database**
 
 ```bash
 npm run db:seed
 ```
 
-### 5. Run the project
+**4. Run the project**
 
 ```bash
 npm run dev
@@ -238,6 +254,36 @@ CREATE INDEX idx_products_category_price ON products(category, price);
 - Tokens passed via `Authorization: Bearer <token>`
 - No refresh tokens (kept simple for portfolio)
 
+### Making a protected request
+
+**Step 1 — log in and capture your token:**
+
+```bash
+TOKEN=$(curl -s -X POST http://localhost:3000/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@example.com","password":"admin123"}' \
+  | jq -r '.data.token')
+```
+
+**Step 2 — call an admin-only route:**
+
+```bash
+curl http://localhost:3000/admin/products \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+Without a valid token you get:
+
+```json
+{
+  "success": false,
+  "error": "UNAUTHORIZED",
+  "message": "No token provided"
+}
+```
+
+> `jq` is optional — you can paste the token from the login response manually if preferred.
+
 ---
 
 ## Error Handling
@@ -257,18 +303,6 @@ CREATE INDEX idx_products_category_price ON products(category, price);
 - Password hashing: bcrypt (10 rounds)
 - No refresh tokens (simplified)
 - Production upgrade: add refresh rotation + rate limiting
-
----
-
-## Quickstart (Docker)
-
-```bash
-docker compose up -d
-npm install
-cp .env.example .env
-npm run db:seed
-npm run dev
-```
 
 ---
 
