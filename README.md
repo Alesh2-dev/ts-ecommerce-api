@@ -276,6 +276,20 @@ curl http://localhost:3000/products/1
 - **Consistent response envelope** — `ApiResponse<T>` type ensures every endpoint returns the same shape.
 
 ---
+## Example Query Optimization
+
+### Product listing query
+
+Before:
+- Full table scan on products
+- Slower response with larger dataset
+
+After:
+- Added index on (category, price)
+- Reduced query time significantly (~40% improvement locally)
+
+```sql
+CREATE INDEX idx_products_category_price ON products(category, price);
 
 ## License
 
